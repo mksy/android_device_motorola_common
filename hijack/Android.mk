@@ -1,15 +1,29 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := hijack.c
+LOCAL_SRC_FILES := \
+        hijack.c \
+        extendedcommands.c \
+        overclock.c \
+        checkup.c \
+        default_bootmenu_ui.c \
+        ui.c \
+
+BOOTMENU_VERSION:=1.1.4
 LOCAL_MODULE := hijack
 LOCAL_MODULE_TAGS := optional
 LOCAL_STATIC_LIBRARIES := \
-	libbusybox \
-	libclearsilverregex \
-	libm \
-	libcutils \
-	libc
+        libminui_bm \
+        libpixelflinger_static \
+        libcutils \
+        libbusybox \
+        libclearsilverregex \
+        libm \
+        libpng \
+        libz \
+        libstdc++ \
+        libc \
+
 LOCAL_FORCE_STATIC_EXECUTABLE := true
 
 ifneq ($(BOARD_HIJACK_UPDATE_BINARY),)
@@ -48,6 +62,10 @@ ifneq ($(BOARD_HIJACK_RECOVERY_MODE_FILE),)
 LOCAL_CFLAGS += -DRECOVERY_MODE_FILE=\"$(BOARD_HIJACK_RECOVERY_MODE_FILE)\"
 endif
 
+LOCAL_CFLAGS += \
+    -DBOOTMENU_VERSION="${BOOTMENU_VERSION}${BOOTMENU_SUFFIX}" -DSTOCK_VERSION=0 \
+    ${EXTRA_CFLAGS}
+
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -57,3 +75,6 @@ LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_MODULE_PATH := $(TARGET_OUT_EXECUTABLES)
 LOCAL_SRC_FILES := $(LOCAL_MODULE)
 include $(BUILD_PREBUILT)
+
+include $(call all-makefiles-under,$(LOCAL_PATH))
+
