@@ -18,6 +18,8 @@ Run "repo sync" to pull down the new git source.
 *** Fix the updater-script to set the proper permissions ***
 ************************************************************
 
+***** NOTE - THIS IS NOT WORKING PROPERLY IN MY TESTING YET ********
+
 To include the proper permissions on the new files, add the following lines to the build/tools/device/mkrecoveryzip.sh file:
 
 echo 'ui_print("Setting permissions for HijackedBootmenu...");' >> $UPDATER_SCRIPT
