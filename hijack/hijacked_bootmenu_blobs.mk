@@ -58,5 +58,8 @@ PRODUCT_COPY_FILES += \
 # Fixes
 PRODUCT_COPY_FILES += \
    ${hijack_root}/fixes/09multitouch-2pt:system/bootmenu/fixes/09multitouch-2pt \
-   ${hijack_root}/fixes/09multitouch-8pt:system/bootmenu/fixes/09multitouch-8pt
+   ${hijack_root}/fixes/09multitouch-8pt:system/bootmenu/fixes/09multitouch-8pt \
 
+# Production Tools
+PRODUCT_COPY_FILES += \
+   out/target/product/shadow/system/etc/hijack-boot.zip:system/bootmenu/recovery/hijack-boot.zip
