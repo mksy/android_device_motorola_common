@@ -15,6 +15,11 @@ PRODUCT_COPY_FILES += \
    ${hijack_root}/config/nvs_map_commands.txt:system/bootmenu/config/nvs_map_commands.txt \
    ${hijack_root}/config/overclock.conf:system/bootmenu/config/overclock.conf \
 
+# Fixes
+PRODUCT_COPY_FILES += \
+   ${hijack_root}/fixes/09multitouch-2pt:system/bootmenu/fixes/09multitouch-2pt \
+   ${hijack_root}/fixes/09multitouch-8pt:system/bootmenu/fixes/09multitouch-8pt \
+
 # images
 PRODUCT_COPY_FILES += \
    ${hijack_root}/images/background.png:system/bootmenu/images/background.png \
@@ -26,6 +31,24 @@ PRODUCT_COPY_FILES += \
    ${hijack_root}/images/indeterminate6.png:system/bootmenu/images/indeterminate6.png \
    ${hijack_root}/images/progress_empty.png:system/bootmenu/images/progress_empty.png \
    ${hijack_root}/images/progress_fill.png:system/bootmenu/images/progress_fill.png \
+
+# modules
+PRODUCT_COPY_FILES += \
+   ${hijack_root}/modules/cpufreq_conservative.ko:system/lib/modules/cpufreq_conservative.ko \
+   ${hijack_root}/modules/cpufreq_interactive.ko:system/lib/modules/cpufreq_interactive.ko \
+   ${hijack_root}/modules/cpufreq_interactivex.ko:system/lib/modules/cpufreq_interactivex.ko \
+   ${hijack_root}/modules/cpufreq_ondemand.ko:system/lib/modules/cpufreq_ondemand.ko \
+   ${hijack_root}/modules/cpufreq_performance.ko:system/lib/modules/cpufreq_performance.ko \
+   ${hijack_root}/modules/cpufreq_powersave.ko:system/lib/modules/cpufreq_powersave.ko \
+   ${hijack_root}/modules/cpufreq_smartass.ko:system/lib/modules/cpufreq_smartass.ko \
+   ${hijack_root}/modules/cpufreq_smartassv2.ko:system/lib/modules/cpufreq_smartassv2.ko \
+   ${hijack_root}/modules/cpufreq_stats.ko:system/lib/modules/cpufreq_stats.ko \
+   ${hijack_root}/modules/cpufreq_userspace.ko:system/lib/modules/cpufreq_userspace.ko \
+   ${hijack_root}/modules/defy_more.ko:system/lib/modules/defy_more.ko \
+   ${hijack_root}/modules/milestone2_more.ko:system/lib/modules/milestone2_more.ko \
+   ${hijack_root}/modules/multitouch.ko:system/lib/modules/multitouch.ko \
+   ${hijack_root}/modules/overclock_defy.ko:system/lib/modules/overclock_defy.ko \
+   ${hijack_root}/modules/symsearch.ko:system/lib/modules/symsearch.ko \
 
 # recovery
 PRODUCT_COPY_FILES += \
@@ -42,6 +65,8 @@ PRODUCT_COPY_FILES += \
    ${hijack_root}/script/data.sh:system/bootmenu/script/data.sh \
    ${hijack_root}/script/fix_hijack_boot.sh:system/bootmenu/script/fix_hijack_boot.sh \
    ${hijack_root}/script/fix_recovery.sh:system/bootmenu/script/fix_recovery.sh \
+   ${hijack_root}/script/fix_touch_2pt.sh:system/bootmenu/script/fix_touch_2pt.sh \
+   ${hijack_root}/script/fix_touch_8pt.sh:system/bootmenu/script/fix_touch_8pt.sh \
    ${hijack_root}/script/nvs_map_creation.sh:system/bootmenu/script/nvs_map_creation.sh \
    ${hijack_root}/script/overclock_backup.sh:system/bootmenu/script/overclock_backup.sh \
    ${hijack_root}/script/overclock_restore.sh:system/bootmenu/script/overclock_restore.sh \
@@ -53,10 +78,5 @@ PRODUCT_COPY_FILES += \
    ${hijack_root}/script/recovery_cwr.sh:system/bootmenu/script/recovery_cwr.sh \
    ${hijack_root}/script/recovery_rzr.sh:system/bootmenu/script/recovery_rzr.sh \
    ${hijack_root}/script/sdcard.sh:system/bootmenu/script/sdcard.sh \
-   ${hijack_root}/script/system.sh:system/bootmenu/script/system.sh \
-
-# Fixes
-PRODUCT_COPY_FILES += \
-   ${hijack_root}/fixes/09multitouch-2pt:system/bootmenu/fixes/09multitouch-2pt \
-   ${hijack_root}/fixes/09multitouch-8pt:system/bootmenu/fixes/09multitouch-8pt
+   ${hijack_root}/script/system.sh:system/bootmenu/script/system.sh
 
