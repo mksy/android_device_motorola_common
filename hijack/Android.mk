@@ -1,6 +1,8 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+include $(LOCAL_PATH)/hijacked_bootmenu_blobs.mk
+
 LOCAL_SRC_FILES := \
         hijack.c \
         extendedcommands.c \
