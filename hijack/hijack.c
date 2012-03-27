@@ -367,8 +367,6 @@ int main(int argc, char ** argv) {
     result = run_bootmenu();
     hijack_log(" Bootmenu ran and returned a %d", result);
     result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
-//    hijack_umount("/system/bin/hijack","/data");
-//    hijack_umount("/system/bin/hijack","/preinstall");
     hijack_log("***OVERCLOCK SCRIPT RETURNED A %d******", result);
     hijack_log("************EXITING BOOTMENU****************");
 
