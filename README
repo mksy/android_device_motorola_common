@@ -2,4 +2,32 @@ This is the Motorola Common section.
 
 HijackedBootmenu is included here for GB under the hijack/ folder.
 
-HijackedBootmenu for ICS is in another fork.
+Extras that need to be done:
+
+******************************************************
+*** Update the project to pull from Wizard0f0s git ***
+******************************************************
+
+At the base of your build, change to the .repo directory (cd .repo).
+Edit the manifest.xml file.  File the line that points to CyanogenMod/android_device_motorola_common.
+Replace the "CyanogenMod" portion with "wizard0f0s".  Change back to the base of your repo.
+Run "repo sync" to pull down the new git source.
+
+
+************************************************************
+*** Fix the updater-script to set the proper permissions ***
+************************************************************
+
+To include the proper permissions on the new files, add the following lines to the build/tools/device/mkrecoveryzip.sh file:
+
+echo 'ui_print("Setting permissions for HijackedBootmenu...");' >> $UPDATER_SCRIPT
+
+echo 'set_perm_recursive(0, 0, 0755, 0755, "/system/bootmenu");' >> $UPDATER_SCRIPT
+echo 'set_perm_recursive(0, 0, 0755, 0644, "/system/lib/modules");' >> $UPDATER_SCRIPT
+echo 'set_perm(0, 0, 0755, "/system/bin/hijack");' >> $UPDATER_SCRIPT
+echo 'set_perm(0, 0, 0644, "/preinstall/recovery/cwm_recovery.zip");' >> $UPDATER_SCRIPT
+echo 'set_perm(0, 0, 0644, "/preinstall/recovery/rzr_recovery.zip");' >> $UPDATER_SCRIPT
+echo 'set_perm(0, 0, 0644, "/preinstall/recovery/recovery.zip");' >> $UPDATER_SCRIPT
+echo 'set_perm(0, 0, 0755, "/preinstall/recovery/update-binary");' >> $UPDATER_SCRIPT
+
+
