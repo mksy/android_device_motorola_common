@@ -29,6 +29,7 @@
 #include "overclock.h"
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
+#include "hijack.h"
 
 //#define DEBUG_ALLOC
 

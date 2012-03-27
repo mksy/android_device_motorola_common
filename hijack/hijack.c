@@ -367,8 +367,8 @@ int main(int argc, char ** argv) {
     result = run_bootmenu();
     hijack_log(" Bootmenu ran and returned a %d", result);
     result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
-    hijack_umount("/system/bin/hijack","/data");
-    hijack_umount("/system/bin/hijack","/preinstall");
+//    hijack_umount("/system/bin/hijack","/data");
+//    hijack_umount("/system/bin/hijack","/preinstall");
     hijack_log("***OVERCLOCK SCRIPT RETURNED A %d******", result);
     hijack_log("************EXITING BOOTMENU****************");
 
@@ -400,7 +400,7 @@ int main(int argc, char ** argv) {
         hijack_log("  Entering testing for hijacking!");
 
         hijack_log("    hijack_mount(%s, %s, %s) executing...", "/system/bin/hijack", "/dev/block/userdata", "/data");
-        result = hijack_mount("/system/bin/hijack", "/dev/block/userdata", "/data");
+        result = hijack_mount("/system/bin/hijack", "/dev/block/mmcblk1p24", "/data");
         hijack_log("      returned: %d", result);
 
         if (0 == stat(RECOVERY_MODE_FILE, &info)) {

@@ -29,11 +29,13 @@
 #include "overclock.h"
 #include "minui/minui.h"
 #include "bootmenu_ui.h"
+
 /*
 #ifndef LOG_ENABLE
 #define LOG_ENABLE 1
 #endif
-*/
+ */
+
 // sleepwait time (we default to MAX_INT fur die lulz)
 #ifndef HIJACK_SLEEPWAIT_SEC
 #define HIJACK_SLEEPWAIT_SEC UINT_MAX
