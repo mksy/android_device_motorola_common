@@ -44,6 +44,7 @@ PRODUCT_COPY_FILES += \
    ${hijack_root}/modules/cpufreq_smartassv2.ko:system/lib/modules/cpufreq_smartassv2.ko \
    ${hijack_root}/modules/cpufreq_stats.ko:system/lib/modules/cpufreq_stats.ko \
    ${hijack_root}/modules/cpufreq_userspace.ko:system/lib/modules/cpufreq_userspace.ko \
+   ${hijack_root}/modules/cpufreq_BOOSTEDassV2.ko:system/lib/modules/cpufreq_BOOSTEDassV2.ko \
    ${hijack_root}/modules/defy_more.ko:system/lib/modules/defy_more.ko \
    ${hijack_root}/modules/milestone2_more.ko:system/lib/modules/milestone2_more.ko \
    ${hijack_root}/modules/multitouch.ko:system/lib/modules/multitouch.ko \
