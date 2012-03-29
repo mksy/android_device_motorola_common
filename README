@@ -9,8 +9,8 @@ Extras that need to be done:
 ******************************************************
 
 At the base of your build, change to the .repo directory (cd .repo).
-Edit the manifest.xml file.  File the line that points to CyanogenMod/android_device_motorola_common.
-Replace the "CyanogenMod" portion with "wizard0f0s".  Change back to the base of your repo.
+Edit the manifest.xml file.  File the line that points to "CyanogenMod/android_device_motorola_common" (without quotes).
+Replace the "CyanogenMod" portion with "wizard0f0s" (the 0's are zeros, not o's).  Change back to the base of your repo.
 Run "repo sync" to pull down the new git source.
 
 
@@ -18,18 +18,9 @@ Run "repo sync" to pull down the new git source.
 *** Fix the updater-script to set the proper permissions ***
 ************************************************************
 
-***** NOTE - THIS IS NOT WORKING PROPERLY IN MY TESTING YET ********
+Download the CM7 shadow_changes.zip from here - http://goo-inside.me/devs/wizard0f0s/Hijacked_Bootmenu/CM7
 
-To include the proper permissions on the new files, add the following lines to the build/tools/device/mkrecoveryzip.sh file:
+Unzip the zip file directly into the device/motorola/shadow/ directory.  This will overwrite some files to create the proper updater-script and remove the onDemand gov settings from the init.mapphone_cdma.rc file.
 
-echo 'ui_print("Setting permissions for HijackedBootmenu...");' >> $UPDATER_SCRIPT
-
-echo 'set_perm_recursive(0, 0, 0755, 0755, "/system/bootmenu");' >> $UPDATER_SCRIPT
-echo 'set_perm_recursive(0, 0, 0755, 0644, "/system/lib/modules");' >> $UPDATER_SCRIPT
-echo 'set_perm(0, 0, 0755, "/system/bin/hijack");' >> $UPDATER_SCRIPT
-echo 'set_perm(0, 0, 0644, "/preinstall/recovery/cwm_recovery.zip");' >> $UPDATER_SCRIPT
-echo 'set_perm(0, 0, 0644, "/preinstall/recovery/rzr_recovery.zip");' >> $UPDATER_SCRIPT
-echo 'set_perm(0, 0, 0644, "/preinstall/recovery/recovery.zip");' >> $UPDATER_SCRIPT
-echo 'set_perm(0, 0, 0755, "/preinstall/recovery/update-binary");' >> $UPDATER_SCRIPT
-
+Now you should be good to go.  I'll be writing documentation on HijackedBootmenu soon and posting a link to them here and in the bootmenu main screen.
 
