@@ -85,7 +85,7 @@ get_address()
 install_module()
 {
   # load module
-  insmod $MODULE_DIR/overclock_defy.ko omap2_clk_init_cpufreq_table_addr=0x$cpufreq_table
+  insmod $MODULE_DIR/overclock.ko omap2_clk_init_cpufreq_table_addr=0x$cpufreq_table
   #set cpufreq_stats_update_addr
   echo 0x$stats_update > /proc/overclock/cpufreq_stats_update_addr
   if [ $load_all -eq 1 ]; then
@@ -123,13 +123,14 @@ set_scaling()
         insmod $MODULE_DIR/cpufreq_interactive.ko
       fi
       echo "interactive" > $SCALING_GOVERNOR
-      echo $int_min_sample_rate > /sys/devices/system/cpu/cpufreq/interactive/min_sample_time
+      #echo $int_min_sample_rate > /sys/devices/system/cpu/cpufreq/interactive/min_sample_time
     ;;
     "2" )
       if [ $load_all -eq 0 ]; then
          rmmod cqufreq_interactive
          insmod $MODULE_DIR/symsearch.ko
-         insmod $MODULE_DIR/cpufreq_interactivex.ko nr_running_addr=0xc005e844
+         #insmod $MODULE_DIR/cpufreq_interactivex.ko nr_running_addr=0xc005e844
+         insmod $MODULE_DIR/cpufreq_interactivex.ko
       fi
       echo "interactiveX" > $SCALING_GOVERNOR
     ;;
@@ -153,13 +154,13 @@ set_scaling()
         insmod $MODULE_DIR/cpufreq_smartass.ko
       fi
       echo "smartass" > $SCALING_GOVERNOR
-      echo $smt_min_cpu_load > /sys/devices/system/cpu/cpu0/cpufreq/smartass/min_cpu_load
-      echo $smt_max_cpu_load > /sys/devices/system/cpu/cpu0/cpufreq/smartass/max_cpu_load
-      echo $smt_awake_min_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/awake_min_freq
-      echo $smt_sleep_max_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/sleep_max_freq
-      echo $smt_up_min_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/up_min_freq
-      echo $smt_wakeup_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/sleep_wakeup_freq
-      echo $smt_ramp_up_step > /sys/devices/system/cpu/cpu0/cpufreq/smartass/ramp_up_step
+      #echo $smt_min_cpu_load > /sys/devices/system/cpu/cpu0/cpufreq/smartass/min_cpu_load
+      #echo $smt_max_cpu_load > /sys/devices/system/cpu/cpu0/cpufreq/smartass/max_cpu_load
+      #echo $smt_awake_min_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/awake_min_freq
+      #echo $smt_sleep_max_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/sleep_max_freq
+      #echo $smt_up_min_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/up_min_freq
+      #echo $smt_wakeup_freq > /sys/devices/system/cpu/cpu0/cpufreq/smartass/sleep_wakeup_freq
+      #echo $smt_ramp_up_step > /sys/devices/system/cpu/cpu0/cpufreq/smartass/ramp_up_step
     ;;
     "7" )
       if [ $load_all -eq 0 ]; then

@@ -190,7 +190,7 @@ int show_menu_fixes(void) {
       "  [Fix Recovery]",
       "  [Fix Wifi - nvs_map.bin]",
       "  [Fix Multitouch - 2pt]",
-      "  [Fix Multitouch - 8pt]",
+      "  [Fix Multitouch - 6 or 8pt]",
       "  --Go Back.",
       NULL
    };

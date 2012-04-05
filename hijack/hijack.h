@@ -46,6 +46,16 @@
 #define RECOVERY_MODE_FILE "/data/.recovery_mode"
 #endif
 
+// file that tells if bootmenu has already run or not
+#ifndef BOOTMENU_RUN_FILE
+#define BOOTMENU_RUN_FILE "/.bootmenu"
+#endif
+
+// init.mapphone_cdma.rc file that needs to be modified to remove default governor settings
+#ifndef INIT_MAPPHONE_CDMA_FILE
+#define INIT_MAPPHONE_CDMA_FILE "/newboot/init.mapphone_cdma.rc"
+#endif
+
 // if we enable logging...
 #ifdef LOG_ENABLE
 // log device
@@ -91,6 +101,7 @@ int remount_root(const char * hijack_exec, int rw);
 int hijack_mount(const char * hijack_exec, const char * dev, const char * mount_point);
 int hijack_umount(const char * hijack_exec, const char * mount_point);
 void hijack_log(char * format, ...);
+int parse_init_mapphone_cdma();
 int mark_file(char * filename);
 int run_bootmenu(void);
 int exec_script(char * hijack_exec, char * script);

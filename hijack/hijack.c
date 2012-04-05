@@ -136,6 +136,39 @@ void hijack_log(char * format, ...) {
 #endif
 }
 
+int parse_init_mapphone_cdma() {
+    char line_buffer[BUFSIZ];
+    FILE *fin = fopen(INIT_MAPPHONE_CDMA_FILE, "r");
+    FILE *fout = fopen("/newboot/init.mapphone_cdma.rc.new", "w");
+    const char * test = "    write /sys/devices/system/cpu/cpu0/cpufreq";
+    char * found;
+    int cmplength = 47;
+    int compare = 0;
+    int result = 0;
+
+    if(!fin) {
+        return 1;
+    }
+
+    while (fgets(line_buffer, sizeof(line_buffer), fin)) {
+        found = strstr(line_buffer, test);
+        if ( found == NULL ) {
+            fputs(line_buffer, fout);
+        }
+    }
+    if (fin != NULL) {
+        if (fout != NULL) {
+            fclose(fin);
+            fclose(fout);
+        } 
+    }
+    exec_script("/system/bin/hijack", FILE_REPLACE);
+    //system("rm /newboot/init.mapphone_cdma.rc");
+    //system("mv /newboot/init.mapphone_cdma.rc.new /newboot/init.mapphone_cdma.rc");
+
+    return result;
+}
+
 int mark_file(char * filename) {
     FILE *f = fopen(filename, "wb");
     fwrite("1", 1, 1, f);
@@ -362,12 +395,15 @@ int main(int argc, char ** argv) {
     }
 
     hijack_log("************ENTERING BOOTMENU**************");
-    hijack_mount("/system/bin/hijack", "/dev/block/mmcblk1p24", "/data");
-    result = hijack_mount("/system/bin/hijack", "/dev/block/preinstall", "/preinstall");
-    result = run_bootmenu();
-    hijack_log(" Bootmenu ran and returned a %d", result);
-    result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
-    hijack_log("***OVERCLOCK SCRIPT RETURNED A %d******", result);
+    if ( 0 != stat(BOOTMENU_RUN_FILE, &info)) {
+        hijack_mount("/system/bin/hijack", "/dev/block/mmcblk1p24", "/data");
+        result = hijack_mount("/system/bin/hijack", "/dev/block/preinstall", "/preinstall");
+        result = run_bootmenu();
+        hijack_log(" Bootmenu ran and returned a %d", result);
+        result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
+        hijack_log("***OVERCLOCK SCRIPT RETURNED A %d******", result);
+        result = mark_file(BOOTMENU_RUN_FILE);
+    }
     hijack_log("************EXITING BOOTMENU****************");
 
 #ifdef LOG_ENABLE
@@ -518,6 +554,14 @@ int main(int argc, char ** argv) {
             char * updater_args[] = { UPDATE_BINARY, "2", "0", BOOT_UPDATE_ZIP, NULL };
             hijack_log("    exec(\"%s %s %s %s\") executing...", UPDATE_BINARY, "2", "0", BOOT_UPDATE_ZIP);
             result = exec_and_wait(updater_args);
+            hijack_log("      returned: %d", result);
+
+/*
+ * This is where I need to parse the /newboot/init.mapphone_cdma.rc file and remove the governor properties
+ */
+            // Parse the /newboot/init.mapphone_cdma.rc file and remove the lines pertaining to the default governor
+            hijack_log("    parse_init_mapphone_cdma");
+            result = parse_init_mapphone_cdma();
             hijack_log("      returned: %d", result);
 
             // now copy everything to root

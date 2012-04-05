@@ -8,6 +8,7 @@
 #endif
 
 static const char *FILE_PRE_MENU  = BM_ROOTDIR "/script/pre_bootmenu.sh";
+static const char *FILE_REPLACE   = BM_ROOTDIR "/script/file_replace.sh";
 
 static const char *FILE_ADBD      = BM_ROOTDIR "/script/adbd.sh";
 static const char *FILE_SDCARD    = BM_ROOTDIR "/script/sdcard.sh";
