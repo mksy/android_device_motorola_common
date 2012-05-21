@@ -59,7 +59,7 @@ int exec_and_wait(char ** argp)
     return (pid == -1 ? -1 : pstat);
 }
 
-int exec_script(char * hijack_exec, char * script) {
+int exec_script(char * hijack_exec, const char * script) {
      char * placeholder[2];
 
      //placeholder[0] = hijack_exec;
@@ -136,17 +136,43 @@ void hijack_log(char * format, ...) {
 #endif
 }
 
-int parse_init_mapphone_cdma() {
+int parse_init_mapphone(const char * path, const char * file) {
     char line_buffer[BUFSIZ];
-    FILE *fin = fopen(INIT_MAPPHONE_CDMA_FILE, "r");
-    FILE *fout = fopen("/newboot/init.mapphone_cdma.rc.new", "w");
+    const char * out_post = ".new";
     const char * test = "    write /sys/devices/system/cpu/cpu0/cpufreq";
+
+
+    char * in_file = (char *)malloc((strlen(path)+strlen(file)+1) * sizeof(char));
+    if (in_file == NULL)
+        hijack_log("*******WIZ - failed to allocate space for in_file");
+
+    char * out = (char *)malloc((strlen(file)+strlen(out_post)+1) * sizeof(char));
+    if (out == NULL)
+        hijack_log("*******WIZ - failed to allocate space for in_file");
+
+    char * out_file = (char *)malloc((strlen(path)+strlen(file)+strlen(out_post)+1) * sizeof(char));
+    if (out_file == NULL)
+        hijack_log("*******WIZ - failed to allocate space for in_file");
+
+    strcpy(out, file);
+    strcat(out, out_post);
+
+    strcpy(in_file, path);
+    strcat(in_file, file);
+
+    strcpy(out_file, path);
+    strcat(out_file, out);
+
+    FILE * fin = fopen(in_file, "r");
+    FILE * fout = fopen(out_file, "w");
+
     char * found;
     int cmplength = 47;
     int compare = 0;
     int result = 0;
 
     if(!fin) {
+        hijack_log("*****WIZ - input file not found");
         return 1;
     }
 
@@ -156,20 +182,20 @@ int parse_init_mapphone_cdma() {
             fputs(line_buffer, fout);
         }
     }
-    if (fin != NULL) {
-        if (fout != NULL) {
-            fclose(fin);
-            fclose(fout);
-        } 
-    }
-    exec_script("/system/bin/hijack", FILE_REPLACE);
-    //system("rm /newboot/init.mapphone_cdma.rc");
-    //system("mv /newboot/init.mapphone_cdma.rc.new /newboot/init.mapphone_cdma.rc");
+
+    if (fin != NULL)
+        fclose(fin);
+    if (fout != NULL)
+        fclose(fout);
+
+    free(in_file);
+    free(out_file);
+    free(out);
 
     return result;
 }
 
-int mark_file(char * filename) {
+int mark_file(const char * filename) {
     FILE *f = fopen(filename, "wb");
     fwrite("1", 1, 1, f);
     if (f != NULL) {
@@ -369,6 +395,7 @@ int run_bootmenu(void) {
         //Battery display does not work atm
         //ui_print("Battery level: %d %%\n", battery_level());
 
+        get_bootmenu_config();
         prompt_and_wait();
         free_menu_headers(main_headers);
 
@@ -401,7 +428,7 @@ int main(int argc, char ** argv) {
         result = run_bootmenu();
         hijack_log(" Bootmenu ran and returned a %d", result);
         result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
-        hijack_log("***OVERCLOCK SCRIPT RETURNED A %d******", result);
+        hijack_log("***OVERCLOCK #1 SCRIPT RETURNED A %d******", result);
         result = mark_file(BOOTMENU_RUN_FILE);
     }
     hijack_log("************EXITING BOOTMENU****************");
@@ -509,11 +536,13 @@ int main(int argc, char ** argv) {
         } else {
 
             hijack_log("  Boot mode detected!");
+            result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
+            hijack_log("***OVERCLOCK #2 SCRIPT RETURNED A %d******", result);
 
 #ifdef LOG_ENABLE
             // since we are in log mode we want to ensure we reboot to recovery in the event of failure
             hijack_log("    mark_file(%s) executing...", RECOVERY_MODE_FILE);
-            result = mark_file(RECOVERY_MODE_FILE);
+            result = mark_file(FILE_BOOTMODE);
             hijack_log("      returned: %d", result);
 #endif
 
@@ -556,13 +585,25 @@ int main(int argc, char ** argv) {
             result = exec_and_wait(updater_args);
             hijack_log("      returned: %d", result);
 
-/*
- * This is where I need to parse the /newboot/init.mapphone_cdma.rc file and remove the governor properties
- */
-            // Parse the /newboot/init.mapphone_cdma.rc file and remove the lines pertaining to the default governor
-            hijack_log("    parse_init_mapphone_cdma");
-            result = parse_init_mapphone_cdma();
-            hijack_log("      returned: %d", result);
+            /*
+             * This is where I need to parse the init.mapphone_cdma.rc file and remove the governor properties
+             */
+
+            if (0 == stat(BOOT_UPDATE_ZIP, &info)) {
+                // 2nd-init is detected, use the /newboot/ format
+                // Parse the /newboot/init.mapphone_cdma.rc file and remove the lines pertaining to the default governor
+                hijack_log("    parse_init_mapphone_cdma - 2nd-init");
+                result = parse_init_mapphone("/newboot/", INIT_MAPPHONE_CDMA_FILE);
+                result = parse_init_mapphone("/", INIT_MAPPHONE_UMTS_FILE);
+                exec_script("/system/bin/hijack", FILE_REPLACE_2ND_INIT);
+                hijack_log("      returned: %d", result);
+            } else {
+                hijack_log("    parse_init_mapphone_cdma - stock init");
+                result = parse_init_mapphone("/", INIT_MAPPHONE_CDMA_FILE);
+                result = parse_init_mapphone("/", INIT_MAPPHONE_UMTS_FILE);
+                exec_script("/system/bin/hijack", FILE_REPLACE_STOCK);
+                hijack_log("      returned: %d", result);
+            }
 
             // now copy everything to root
             char * copy_args[] = { "/newboot/sbin/hijack", "cp", "-a", "/newboot/.", "/", NULL };
@@ -599,6 +640,8 @@ int main(int argc, char ** argv) {
             result = exec_and_wait(last_log_dump_args);
             hijack_log("      returned: %d", result);
 #endif
+            result = exec_script("/system/bin/hijack", FILE_OVERCLOCK);
+            hijack_log("***OVERCLOCK #3 SCRIPT RETURNED A %d******", result);
 
             // now we re-run init (this should restart /init)
             char * init_args[] = { "/sbin/2nd-init", NULL };
@@ -631,6 +674,9 @@ hijack_log("    argp[%d] = \"%s\"", i, argp[i]);
     // should clean up memory leaks, but it really doesn't matter since the process immediately exits.
     result = exec_and_wait(argp);
 hijack_log("    returned: %d", result);
+
+    exec_script("/system/bin/hijack", FILE_OVERCLOCK);
+    hijack_log("***OVERCLOCK #4 SCRIPT RETURNED A %d******", result);
 
     return result;
 }

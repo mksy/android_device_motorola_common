@@ -19,6 +19,10 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
    ${hijack_root}/fixes/09multitouch-2pt:system/bootmenu/fixes/09multitouch-2pt \
    ${hijack_root}/fixes/09multitouch-8pt:system/bootmenu/fixes/09multitouch-8pt \
+   ${hijack_root}/fixes/10keylightsoff:system/bootmenu/fixes/10keylightsoff \
+   ${hijack_root}/fixes/power_wake_on/cdma_shadow-keypad.kl:system/bootmenu/fixes/power_wake_on/cdma_shadow-keypad.kl \
+   ${hijack_root}/fixes/power_wake_on/qwerty.kl:system/bootmenu/fixes/power_wake_on/qwerty.kl \
+   ${hijack_root}/fixes/power_wake_on/sholes-keypad.kl:system/bootmenu/fixes/power_wake_on/sholes-keypad.kl \
 
 # images
 PRODUCT_COPY_FILES += \
@@ -64,7 +68,13 @@ PRODUCT_COPY_FILES += \
    ${hijack_root}/script/cdrom.sh:system/bootmenu/script/cdrom.sh \
    ${hijack_root}/script/_config.sh:system/bootmenu/script/_config.sh \
    ${hijack_root}/script/data.sh:system/bootmenu/script/data.sh \
+   ${hijack_root}/script/file_replace_2nd_init.sh:system/bootmenu/script/file_replace_2nd_init.sh \
+   ${hijack_root}/script/file_replace_stock.sh:system/bootmenu/script/file_replace_stock.sh \
    ${hijack_root}/script/fix_hijack_boot.sh:system/bootmenu/script/fix_hijack_boot.sh \
+   ${hijack_root}/script/fix_key_lights_off.sh:system/bootmenu/script/fix_key_lights_off.sh \
+   ${hijack_root}/script/fix_key_lights_on.sh:system/bootmenu/script/fix_key_lights_on.sh \
+   ${hijack_root}/script/fix_power_wake_off.sh:system/bootmenu/script/fix_power_wake_off.sh \
+   ${hijack_root}/script/fix_power_wake_on.sh:system/bootmenu/script/fix_power_wake_on.sh \
    ${hijack_root}/script/fix_recovery.sh:system/bootmenu/script/fix_recovery.sh \
    ${hijack_root}/script/fix_touch_2pt.sh:system/bootmenu/script/fix_touch_2pt.sh \
    ${hijack_root}/script/fix_touch_8pt.sh:system/bootmenu/script/fix_touch_8pt.sh \

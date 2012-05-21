@@ -93,8 +93,10 @@ install_module()
     insmod $MODULE_DIR/cpufreq_powersave.ko
     insmod $MODULE_DIR/symsearch.ko
     insmod $MODULE_DIR/cpufreq_stats.ko
+    insmod $MODULE_DIR/cpufreq_interactivex.ko nr_running_addr=0xc005e844
+    insmod $MODULE_DIR/cpufreq_smartass.ko
     insmod $MODULE_DIR/cpufreq_smartassv2.ko
-    insmod $MODULE_DIR/cpufreq_BOOSTEDassV2.ko
+    insmod $MODULE_DIR/BOOSTEDassV2.ko
   fi
 }
 
@@ -172,8 +174,8 @@ set_scaling()
       if [ $load_all -eq 0 ]; then
          insmod $MODULE_DIR/symsearch.ko
          insmod $MODULE_DIR/cpufreq_BOOSTEDassV2.ko
-         echo "BOOSTEDassV2" > $SCALING_GOVERNOR
       fi
+      echo "BOOSTEDassV2" > $SCALING_GOVERNOR
     ;;
     "9" )
       if [ $load_all -eq 0 ]; then

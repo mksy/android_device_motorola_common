@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := \
         default_bootmenu_ui.c \
         ui.c \
 
-BOOTMENU_VERSION:=1.1.5
+BOOTMENU_VERSION:=1.2.0
 LOCAL_MODULE := hijack
 LOCAL_MODULE_TAGS := optional
 LOCAL_STATIC_LIBRARIES := \

@@ -44,20 +44,6 @@ struct overclock_config overclock[] = {
   { "vsel2", 48 },
   { "vsel3", 54 },
   { "vsel4", 66 },
-  { "con_up_threshold", 80 },
-  { "con_down_threshold", 20 },
-  { "con_freq_step", 5 },
-  { "con_sampling_rate", 160000 },
-  { "int_min_sample_rate", 50000 },
-  { "ond_up_threshold", 86 },
-  { "ond_sampling_rate", 50000 },
-  { "smt_min_cpu_load", 20 },
-  { "smt_max_cpu_load", 80 },
-  { "smt_awake_min_freq", 200000 },
-  { "smt_sleep_max_freq", 200000 },
-  { "smt_up_min_freq", 1000000 },
-  { "smt_wakeup_freq", 1000000 },
-  { "smt_ramp_up_step", 200000 },
   { NULL, 0 },
 };
 
@@ -192,6 +178,9 @@ menu_overclock_status(int intl_value) {
 
 int
 menu_overclock_scaling(void) {
+
+// Build a dynamic read of the available governors here
+// instead of having them hard coded
 
 #define OVERCLOCK_SCALING_Conservative   0
 #define OVERCLOCK_SCALING_Interactive    1
@@ -379,25 +368,11 @@ show_menu_overclock(void) {
 #define OVERCLOCK_VSEL2                   8
 #define OVERCLOCK_VSEL3                   9
 #define OVERCLOCK_VSEL4                  10
-#define OVERCLOCK_CON_UP_THRESHOLD       11
-#define OVERCLOCK_CON_DOWN_THRESHOLD     12
-#define OVERCLOCK_CON_FREQ_STEP          13
-#define OVERCLOCK_CON_SAMPLING_RATE      14
-#define OVERCLOCK_INT_MIN_SAMPLE_RATE    15
-#define OVERCLOCK_OND_UP_THRESHOLD       16
-#define OVERCLOCK_OND_SAMPLING_RATE      17
-#define OVERCLOCK_smt_min_cpu_load       18
-#define OVERCLOCK_smt_max_cpu_load       19
-#define OVERCLOCK_smt_awake_min_freq     20
-#define OVERCLOCK_smt_sleep_max_freq     21
-#define OVERCLOCK_smt_up_min_freq        22
-#define OVERCLOCK_smt_wakeup_freq        23
-#define OVERCLOCK_smt_ramp_up_step       24
-#define OVERCLOCK_DEFAULT                25
-#define OVERCLOCK_BACKUP                 27
-#define OVERCLOCK_RESTORE                28
-#define OVERCLOCK_SAVE                   29
-#define OVERCLOCK_GOBACK                 30
+#define OVERCLOCK_DEFAULT                11
+#define OVERCLOCK_BACKUP                 13
+#define OVERCLOCK_RESTORE                14
+#define OVERCLOCK_SAVE                   15
+#define OVERCLOCK_GOBACK                 16
 
   static char** title_headers = NULL;
   int select = 0;
@@ -410,7 +385,7 @@ show_menu_overclock(void) {
   }
 
   get_overclock_config();
-  char* items[32];
+  char* items[18];
     #define OC_MALLOC_FIRST 3
     items[3] = (char*)malloc(sizeof(char)*64);
     items[4] = (char*)malloc(sizeof(char)*64);
@@ -420,28 +395,14 @@ show_menu_overclock(void) {
     items[8] = (char*)malloc(sizeof(char)*64);
     items[9] = (char*)malloc(sizeof(char)*64);
     items[10] = (char*)malloc(sizeof(char)*64);
-    items[11] = (char*)malloc(sizeof(char)*64);
-    items[12] = (char*)malloc(sizeof(char)*64);
-    items[13] = (char*)malloc(sizeof(char)*64);
-    items[14] = (char*)malloc(sizeof(char)*64);
-    items[15] = (char*)malloc(sizeof(char)*64);
-    items[16] = (char*)malloc(sizeof(char)*64);
-    items[17] = (char*)malloc(sizeof(char)*64);
-    items[18] = (char*)malloc(sizeof(char)*64);
-    items[19] = (char*)malloc(sizeof(char)*64);
-    items[20] = (char*)malloc(sizeof(char)*64);
-    items[21] = (char*)malloc(sizeof(char)*64);
-    items[22] = (char*)malloc(sizeof(char)*64);
-    items[23] = (char*)malloc(sizeof(char)*64);
-    items[24] = (char*)malloc(sizeof(char)*64);
-    #define OC_MALLOC_LAST 24
-    items[25] = "  [Set defaults(*req reboot/don't save!!)]";
-    items[26] = "";
-    items[27] = "  [Backup Settings]";
-    items[28] = "  [Restore Settings]";
-    items[29] = "  [Save]";
-    items[30] = "  --Go Back";
-    items[31] = NULL;
+    #define OC_MALLOC_LAST 10
+    items[11] = "  [Set defaults(*req reboot/don't save!!)]";
+    items[12] = "";
+    items[13] = "  [Backup Settings]";
+    items[14] = "  [Restore Settings]";
+    items[15] = "  [Save]";
+    items[16] = "  --Go Back";
+    items[17] = NULL;
 
   for (;;) {
 
@@ -487,20 +448,6 @@ show_menu_overclock(void) {
     sprintf(items[7], "  +Vsel1: [%d] -->", get_overclock_value("vsel1"));
     sprintf(items[8], "  +Vsel2: [%d] -->", get_overclock_value("vsel2"));
     sprintf(items[9], "  +Vsel3: [%d] -->", get_overclock_value("vsel3"));
-    sprintf(items[11], "  +con_up_threshold: [%d] -->", get_overclock_value("con_up_threshold"));
-    sprintf(items[12], "  +con_down_threshold: [%d] -->", get_overclock_value("con_down_threshold"));
-    sprintf(items[13], "  +con_freq_step: [%d] -->", get_overclock_value("con_freq_step"));
-    sprintf(items[14], "  +con_sampling_rate: [%d] -->", get_overclock_value("con_sampling_rate"));
-    sprintf(items[15], "  +int_min_sample_rate: [%d] -->", get_overclock_value("int_min_sample_rate"));
-    sprintf(items[16], "  +ond_up_threshold: [%d] -->", get_overclock_value("ond_up_threshold"));
-    sprintf(items[17], "  +ond_sampling_rate: [%d] -->", get_overclock_value("ond_sampling_rate"));
-    sprintf(items[18], "  +smt_min_cpu_load: [%d] -->", get_overclock_value("smt_min_cpu_load"));
-    sprintf(items[19], "  +smt_max_cpu_load: [%d] -->", get_overclock_value("smt_max_cpu_load"));
-    sprintf(items[20], "  +smt_awake_min_freq: [%d] -->", get_overclock_value("smt_awake_min_freq"));
-    sprintf(items[21], "  +smt_sleep_max_freq: [%d] -->", get_overclock_value("smt_sleep_max_freq"));
-    sprintf(items[22], "  +smt_up_min_freq: [%d] -->", get_overclock_value("smt_up_min_freq"));
-    sprintf(items[23], "  +smt_wakeup_freq: [%d] -->", get_overclock_value("smt_wakeup_freq"));
-    sprintf(items[24], "  +smt_ramp_up_step: [%d] -->", get_overclock_value("smt_ramp_up_step"));
 
     int chosen_item = get_menu_selection(title_headers, items, 1, select);
 
@@ -539,48 +486,6 @@ show_menu_overclock(void) {
 
       case OVERCLOCK_VSEL3:
         set_overclock_value("vsel3", menu_set_value("Vsel3", get_overclock_value("vsel3"), 10, 100, 1)); break;
-
-      case OVERCLOCK_CON_UP_THRESHOLD:
-        set_overclock_value("con_up_threshold", menu_set_value("con_up_threshold", get_overclock_value("con_up_threshold"), 1, 100, 1)); break;
-
-      case OVERCLOCK_CON_DOWN_THRESHOLD:
-        set_overclock_value("con_down_threshold", menu_set_value("con_down_threshold", get_overclock_value("con_down_threshold"), 1, 100, 1)); break;
-
-      case OVERCLOCK_CON_FREQ_STEP:
-        set_overclock_value("con_freq_step", menu_set_value("con_freq_step", get_overclock_value("con_freq_step"), 1, 100, 1)); break;
-
-      case OVERCLOCK_CON_SAMPLING_RATE:
-        set_overclock_value("con_sampling_rate", menu_set_value("con_sampling_rate", get_overclock_value("con_sampling_rate"), 160000, 500000, 1000)); break;
-
-      case OVERCLOCK_INT_MIN_SAMPLE_RATE:
-        set_overclock_value("int_min_sample_rate", menu_set_value("int_min_sample_rate", get_overclock_value("int_min_sample_rate"), 5000, 500000, 1000)); break;
-
-      case OVERCLOCK_OND_UP_THRESHOLD:
-        set_overclock_value("ond_up_threshold", menu_set_value("ond_up_threshold", get_overclock_value("ond_up_threshold"), 1, 100, 1)); break;
-
-      case OVERCLOCK_OND_SAMPLING_RATE:
-        set_overclock_value("ond_sampling_rate", menu_set_value("ond_sampling_rate", get_overclock_value("ond_sampling_rate"), 10000, 100000, 1000)); break;
-
-      case OVERCLOCK_smt_min_cpu_load:
-        set_overclock_value("smt_min_cpu_load", menu_set_value("smt_min_cpu_load", get_overclock_value("smt_min_cpu_load"), 1, 100, 1)); break;
-
-      case OVERCLOCK_smt_max_cpu_load:
-        set_overclock_value("smt_max_cpu_load", menu_set_value("smt_max_cpu_load", get_overclock_value("smt_max_cpu_load"), 1, 100, 1)); break;
-
-      case OVERCLOCK_smt_awake_min_freq:
-        set_overclock_value("smt_awake_min_freq", menu_set_value("smt_awake_min_freq", get_overclock_value("smt_awake_min_freq"), 200000, 2000000, 10000)); break;
-
-      case OVERCLOCK_smt_sleep_max_freq:
-        set_overclock_value("smt_sleep_max_freq", menu_set_value("smt_sleep_max_freq", get_overclock_value("smt_sleep_max_freq"), 200000, 2000000, 10000)); break;
-
-      case OVERCLOCK_smt_up_min_freq:
-        set_overclock_value("smt_up_min_freq", menu_set_value("smt_up_min_freq", get_overclock_value("smt_up_min_freq"), 200000, 2000000, 10000)); break;
-
-      case OVERCLOCK_smt_wakeup_freq:
-        set_overclock_value("smt_wakeup_freq", menu_set_value("smt_wakeup_freq", get_overclock_value("smt_wakeup_freq"), 200000, 2000000, 10000)); break;
-
-      case OVERCLOCK_smt_ramp_up_step:
-        set_overclock_value("smt_ramp_up_step", menu_set_value("smt_ramp_up_step", get_overclock_value("smt_ramp_up_step"), 100000, 500000, 10000)); break;
 
       case OVERCLOCK_BACKUP:
         ui_print("Saving config.... ");

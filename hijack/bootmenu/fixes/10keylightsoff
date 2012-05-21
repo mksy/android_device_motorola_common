@@ -1,0 +1,3 @@
+#!/system/bin/sh 
+echo 0 > /sys/devices/platform/leds-cpcap-adb/leds/button-backlight/brightness 
+chmod 444 /sys/devices/platform/leds-cpcap-adb/leds/button-backlight/brightness

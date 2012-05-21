@@ -11,6 +11,7 @@ BB="/sbin/busybox"
 BB_BM="/system/bootmenu/binary/busybox"
 BM_REC="/system/bootmenu/recovery"
 PRE_REC="/preinstall/recovery"
+BM_PW_OFF="/system/bootmenu/fixes/power_wake_off"
 
 ## reduce lcd backlight to save battery
 echo 64 > /sys/class/leds/lcd-backlight/brightness
@@ -22,8 +23,24 @@ if [ ! -f $BM_REC/hijack-boot.zip ]; then
    cp -f /system/etc/hijack-boot.zip $BM_REC/
 fi
 
+if [ ! -d $BM_PW_OFF ]; then
+   mkdir -p $BM_PW_OFF
+fi
+
+if [ ! -f $BM_PW_OFF/cdma_shadow-keypad.kl ]; then
+   cp -f /system/usr/keylayout/cdma_shadow-keypad.kl $BM_PW_OFF/cdma_shadow-keypad.kl
+fi
+
+if [ ! -f $BM_PW_OFF/qwerty.kl ]; then
+   cp -f /system/usr/keylayout/qwerty.kl $BM_PW_OFF/qwerty.kl
+fi
+
+if [ ! -f $BM_PW_OFF/sholes-keypad.kl ]; then
+   cp -f /system/usr/keylayout/sholes-keypad.kl $BM_PW_OFF/sholes-keypad.kl
+fi
+
 if [ ! -d $PRE_REC ]; then
-   mkdir $PRE_REC
+   mkdir -p $PRE_REC
 fi
 
 if [ ! -f $PRE_REC/cwm-recovery.zip ]; then

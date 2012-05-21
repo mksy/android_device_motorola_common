@@ -53,7 +53,12 @@
 
 // init.mapphone_cdma.rc file that needs to be modified to remove default governor settings
 #ifndef INIT_MAPPHONE_CDMA_FILE
-#define INIT_MAPPHONE_CDMA_FILE "/newboot/init.mapphone_cdma.rc"
+#define INIT_MAPPHONE_CDMA_FILE "init.mapphone_cdma.rc"
+#endif
+
+// init.mapphone_umts.rc file that needs to be modified to remove default governor settings
+#ifndef INIT_MAPPHONE_UMTS_FILE
+#define INIT_MAPPHONE_UMTS_FILE "init.mapphone_umts.rc"
 #endif
 
 // if we enable logging...
@@ -102,9 +107,9 @@ int hijack_mount(const char * hijack_exec, const char * dev, const char * mount_
 int hijack_umount(const char * hijack_exec, const char * mount_point);
 void hijack_log(char * format, ...);
 int parse_init_mapphone_cdma();
-int mark_file(char * filename);
+int mark_file(const char * filename);
 int run_bootmenu(void);
-int exec_script(char * hijack_exec, char * script);
+int exec_script(char * hijack_exec, const char * script);
 int get_menu_selection(char** headers, char** items, int menu_only, int initial_selection);
 void free_menu_headers(char **headers);
 static void prompt_and_wait();
