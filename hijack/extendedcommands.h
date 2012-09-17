@@ -21,6 +21,7 @@ static const char *FILE_OVERCLOCK       = BM_ROOTDIR "/script/overclock.sh";
 static const char *FILE_OVERCLOCK_CONF  = BM_ROOTDIR "/config/overclock.conf";
 static const char *FILE_OVERCLOCK_RESTORE = BM_ROOTDIR "/script/overclock_restore.sh";
 static const char *FILE_OVERCLOCK_BACKUP  = BM_ROOTDIR "/script/overclock_backup.sh";
+static const char *FILE_OVERCLOCK_GOVS    = BM_ROOTDIR "/config/governors.conf";
 
 static const char *FILE_CWR_RECOVERY  = BM_ROOTDIR "/script/recovery_cwr.sh";
 static const char *FILE_RZR_RECOVERY  = BM_ROOTDIR "/script/recovery_rzr.sh";

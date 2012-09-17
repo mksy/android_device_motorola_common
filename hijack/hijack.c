@@ -256,7 +256,7 @@ int get_menu_selection(char** headers, char** items, int menu_only,
 
     int action = device_handle_key(key, visible);
 
-      if (action < 0) {
+    if (action < 0) {
         switch (action) {
           case HIGHLIGHT_UP:
             --selected;
@@ -274,7 +274,7 @@ int get_menu_selection(char** headers, char** items, int menu_only,
             break;
           case NO_ACTION:
             break;
-      }
+        }
     } else if (!menu_only) {
       chosen_item = action;
     }
@@ -359,6 +359,11 @@ int run_bootmenu(void) {
 
     led_alert("blue", ENABLE);
 
+    if (usb_connected()) {
+        exec_script("/system/bin/hijack", FILE_ADBD);
+        adb_started = 1;
+    }
+
     if (0 == stat(BOOTMODE_CONFIG_FILE, &info)) {
        hijack_log("BOOTMENU DIRECT BOOT DETECTED");
        status = BUTTON_PRESSED;
@@ -368,10 +373,7 @@ int run_bootmenu(void) {
        status = (wait_key(KEY_VOLUMEDOWN) ? BUTTON_PRESSED : BUTTON_TIMEOUT);
     }
 
-    if (usb_connected()) {
-        exec_script("/system/bin/hijack", FILE_ADBD);
-        adb_started = 1;
-    }
+    read_governors();
 
     // on timeout
     if (status != BUTTON_PRESSED) {

@@ -21,6 +21,7 @@
 # include all of the hijackery
 PRODUCT_PACKAGES += \
 	hijack \
+        hijack-test \
 	hijack.log_dump \
 	hijack_boot_getprop \
 	hijack_boot_2nd-init \

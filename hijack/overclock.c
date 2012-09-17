@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <dirent.h>
 
 #include "common.h"
 #include "overclock.h"
@@ -24,32 +25,44 @@
 #include "bootmenu_ui.h"
 #include "hijack.h"
 
+#define MAX_NUM_GOVS 32
+#define MAX_GOV_LONG_NAME 64
+#define MAX_GOV_SHORT_NAME 32
+
 #define USE_4_CLOCK_LEVELS
 
 struct overclock_config
 {
- const char *name;
- int value;
+ const char *name; //configuration & variable name
+ int value; //value, does not apply for scaling
+ char gov[255]; //governor, ONLY applies to scaling
 };
 
 struct overclock_config overclock[] = {
-  { "enable", 1 },
-  { "load_all", 0 },
-  { "scaling", 3 },
-  { "clk1", 300 },
-  { "clk2", 600 },
-  { "clk3", 800 },
-  { "clk4", 1000 },
-  { "vsel1", 34 },
-  { "vsel2", 48 },
-  { "vsel3", 54 },
-  { "vsel4", 66 },
-  { NULL, 0 },
+   { "enable", 1, "" },
+   { "scaling", 0, "cpufreq_smartassv2.ko" },
+   { "clk1", 300, "" },
+   { "clk2", 600, "" },
+   { "clk3", 800, "" },
+   { "clk4", 1000, "" },
+   { "vsel1", 34, "" },
+   { "vsel2", 48, "" },
+   { "vsel3", 54, "" },
+   { "vsel4", 66, "" },
+   { NULL, NULL },
 };
 
+struct gov_config {
+   char *gov_module;
+   char *gov_common;
+};
 
-int
-get_overclock_value(char* name) {
+struct gov_config govs[31];
+
+int total_gov_count=0;
+
+
+int get_overclock_value(char* name) {
   struct overclock_config *config;
 
   for (config = overclock; config->name != NULL; ++config) {
@@ -60,8 +73,30 @@ get_overclock_value(char* name) {
   return -1;
 }
 
-int
-set_overclock_value(char* name, int value) {
+char* get_gov_common(char* name) {
+   struct gov_config *config;
+
+   for(config = govs; config->gov_module != NULL; ++config) {
+      if (!strcmp(config->gov_module, name)) {
+         return config->gov_common;
+      }
+   }
+   return -1;
+}
+
+char* get_overclock_gov(char* name) {
+   struct overclock_config *config;
+
+   for (config=overclock; config->name != NULL; ++config) {
+      if (!strcmp(config->name, name)) {
+         return config->gov;
+      }
+   }
+   return -1;
+}
+
+
+int set_overclock_value(char* name, int value) {
   struct overclock_config *config;
 
   for (config = overclock; config->name != NULL; ++config) {
@@ -73,30 +108,50 @@ set_overclock_value(char* name, int value) {
   return -1;
 }
 
-int
-get_overclock_config(void) {
+int set_overclock_gov(char* name, char* gov) {
+   struct overclock_config *config;
+
+   for (config = overclock; config->name != NULL; ++config) {
+      if (!strcmp(config->name, name)) {
+         strcpy(config->gov,gov);
+         return 0;
+      }
+   }
+   return -1;
+}
+
+
+int get_overclock_config(void) {
   FILE *fp;
   char name[255];
+  char gov[255];
   struct overclock_config *config;
+
+  if (check_for_old_config()) {
+     update_old_config();
+  }
 
   if ((fp = fopen(FILE_OVERCLOCK_CONF, "r")) == NULL) {
     return 1;
   }
 
   while((fscanf(fp, "%s", name)) != EOF) {
-
     for (config = overclock; config->name != NULL; ++config) {
       if (!strcmp(config->name, name)) {
-        fscanf(fp, "%d", &config->value);
+        if (!strcmp(config->name, "scaling"))
+           fscanf(fp, "%s", &config->gov);
+        else
+           fscanf(fp, "%d", &config->value);
       }
     }
   }
   fclose(fp);
+  set_overclock_config();
   return 0;
 }
 
-int
-set_overclock_config(void) {
+
+int set_overclock_config(void) {
   FILE *fp;
   struct overclock_config *config;
 
@@ -106,15 +161,18 @@ set_overclock_config(void) {
 
   for (config = overclock; config->name != NULL; ++config) {
     fprintf(fp, "%s", config->name);
-    fprintf(fp, " %d\n", config->value);
+    if (!strcmp(config->name,"scaling"))
+       fprintf(fp, " %s", config->gov);
+    else
+       fprintf(fp, " %d", config->value);
+    fprintf(fp, "\n");
   }
   fclose(fp);
   return 0;
 }
 
 
-int
-menu_overclock_status(int intl_value) {
+int menu_overclock_status(int intl_value) {
 
 #define OVERCLOCK_STATUS_DISABLE      0
 #define OVERCLOCK_STATUS_ENABLE       1
@@ -176,22 +234,10 @@ menu_overclock_status(int intl_value) {
 # define MENU_OVERCLOCK " CPU settings -->"
 #endif
 
-int
-menu_overclock_scaling(void) {
+int menu_overclock_scaling(void) {
 
 // Build a dynamic read of the available governors here
 // instead of having them hard coded
-
-#define OVERCLOCK_SCALING_Conservative   0
-#define OVERCLOCK_SCALING_Interactive    1
-#define OVERCLOCK_SCALING_InteractiveX   2
-#define OVERCLOCK_SCALING_Ondemand       3
-#define OVERCLOCK_SCALING_Performance    4
-#define OVERCLOCK_SCALING_Powersave      5
-#define OVERCLOCK_SCALING_Smartass       6
-#define OVERCLOCK_SCALING_Smartass2      7
-#define OVERCLOCK_SCALING_BOOSTEDass2    8
-#define OVERCLOCK_SCALING_Userspace      9
 
   static char** title_headers = NULL;
 
@@ -203,100 +249,63 @@ menu_overclock_scaling(void) {
     };
     title_headers = prepend_title((const char**)headers);
   }
-
-  char* items[10][2] = {
-    { "  *[Conservative]", "   [Conservative]" },
-    { "  *[Interactive]",  "   [Interactive]" },
-    { "  *[InteractiveX]", "   [InteractiveX]" },
-    { "  *[Ondemand]",     "   [Ondemand]" },
-    { "  *[Performance]",  "   [Performance]" },
-    { "  *[Powersave]",    "   [Powersave]" },
-    { "  *[Smartass]",     "   [Smartass]" },
-    { "  *[SmartassV2]",   "   [SmartassV2]" },
-    { "  *[BOOSTEDassV2]", "   [BOOSTEDassV2]" },
-    { "  *[Userspace]",    "   [Userspace]" },
-  };
+  char * set_gov = get_overclock_gov("scaling");
 
   for (;;) {
 
-    char* options[13];
-    int i;
-    int mode = get_overclock_value("scaling");
+    char* options[total_gov_count + 3];
+    int i = 0;
+    int mode = 0;
 
-    for (i = 0; i < 10; ++i) {
-      if (mode == i)
-        options[i] = items[i][0];
-      else
-        options[i] = items[i][1];
+    struct gov_config *ptr;
+    char *entry = "   [";
+    char *entry2 = "  *[";
+    char *end = "]";
+
+    for (ptr = govs; ptr->gov_module != NULL; ptr++) {
+       char *final = (char*)malloc(sizeof(char)*MAX_GOV_SHORT_NAME);
+       if (ptr->gov_module != NULL) {
+          if (!strcmp(set_gov, ptr->gov_module)) {
+             final = strcpy(final, entry2);
+             mode = i;
+          } else
+             final = strcpy(final, entry);
+          final = strcat(final, ptr->gov_common);
+          final = strcat(final, end);
+          options[i] = final;
+       }
+//but not to here
+       i++;
     }
-    options[10] = "";
-    options[11] = "   --Go Back.";
-    options[12] = NULL;
+          
+    options[total_gov_count-1] = "";
+    options[total_gov_count] = "   --Go Back.";
+    options[total_gov_count + 1] = NULL;
 
     int chosen_item = get_menu_selection(title_headers, options, 1, mode);
 
-    switch (chosen_item) {
-      case OVERCLOCK_SCALING_Conservative:
-        set_overclock_value("scaling", 0);
-        ui_print("Governer set to Conservative.\n");
-        break;
+    struct gov_config *ptr2;
+    int lcv = 0;
 
-      case OVERCLOCK_SCALING_Interactive:
-        set_overclock_value("scaling", 1);
-        ui_print("Governer set to Interactive.\n");
-        break;
-
-      case OVERCLOCK_SCALING_InteractiveX:
-        set_overclock_value("scaling", 2);
-        ui_print("Governer set to InteractiveX.\n");
-        break;
-
-      case OVERCLOCK_SCALING_Ondemand:
-        set_overclock_value("scaling", 3);
-        ui_print("Governer set to Ondemand.\n");
-        break;
-
-      case OVERCLOCK_SCALING_Performance:
-        set_overclock_value("scaling", 4);
-        ui_print("Governer set to Performance.\n");
-        break;
-
-      case OVERCLOCK_SCALING_Powersave:
-        set_overclock_value("scaling", 5);
-        ui_print("Governer set to Powersave.\n");
-        break;
-
-      case OVERCLOCK_SCALING_Smartass:
-        set_overclock_value("scaling", 6);
-        ui_print("Governer set to Smartass.\n");
-        break;
-
-      case OVERCLOCK_SCALING_Smartass2:
-        set_overclock_value("scaling", 7);
-        ui_print("Governer set to SmartassV2.\n");
-        break;
-
-      case OVERCLOCK_SCALING_BOOSTEDass2:
-        set_overclock_value("scaling", 8);
-        ui_print("Governer set to BOOSTEDassV2.\n");
-        break;
-
-      case OVERCLOCK_SCALING_Userspace:
-        set_overclock_value("scaling", 9);
-        ui_print("Governer set to Userspace.\n");
-        break;
-
-      default:
-        return 0;
+/*
+ * I think this needs to be replaced with a select statement to keep it from crashing in this menu
+ *
+ */
+    for (ptr2 = govs, lcv=0; (ptr2->gov_module != NULL) && (lcv < total_gov_count); ++ptr2, lcv++) {
+       if(lcv == chosen_item)
+          break;
     }
+
+    set_overclock_gov("scaling", ptr2->gov_module);
+
+    return 0;
   }
 
   return 0;
 }
 
 
-int
-menu_set_value(char* name, int intl_value, int min_value, int max_value, int step) {
+int menu_set_value(char* name, int intl_value, int min_value, int max_value, int step) {
 
 #define SETVALUE_TITLE     0
 #define SETVALUE_SEP       1
@@ -354,25 +363,24 @@ menu_set_value(char* name, int intl_value, int min_value, int max_value, int ste
   return value;
 }
 
-int
-show_menu_overclock(void) {
+
+int show_menu_overclock(void) {
 
 #define OVERCLOCK_STATUS                  0
-#define OVERCLOCK_LOAD_ALL                1
-#define OVERCLOCK_SCALING                 2
-#define OVERCLOCK_CLOCK1                  3
-#define OVERCLOCK_CLOCK2                  4
-#define OVERCLOCK_CLOCK3                  5
-#define OVERCLOCK_CLOCK4                  6
-#define OVERCLOCK_VSEL1                   7
-#define OVERCLOCK_VSEL2                   8
-#define OVERCLOCK_VSEL3                   9
-#define OVERCLOCK_VSEL4                  10
-#define OVERCLOCK_DEFAULT                11
-#define OVERCLOCK_BACKUP                 13
-#define OVERCLOCK_RESTORE                14
-#define OVERCLOCK_SAVE                   15
-#define OVERCLOCK_GOBACK                 16
+#define OVERCLOCK_SCALING                 1
+#define OVERCLOCK_CLOCK1                  2
+#define OVERCLOCK_CLOCK2                  3
+#define OVERCLOCK_CLOCK3                  4
+#define OVERCLOCK_CLOCK4                  5
+#define OVERCLOCK_VSEL1                   6
+#define OVERCLOCK_VSEL2                   7
+#define OVERCLOCK_VSEL3                   8
+#define OVERCLOCK_VSEL4                   9
+#define OVERCLOCK_DEFAULT                10
+#define OVERCLOCK_BACKUP                 12
+#define OVERCLOCK_RESTORE                13
+#define OVERCLOCK_SAVE                   14
+#define OVERCLOCK_GOBACK                 15
 
   static char** title_headers = NULL;
   int select = 0;
@@ -385,8 +393,10 @@ show_menu_overclock(void) {
   }
 
   get_overclock_config();
-  char* items[18];
-    #define OC_MALLOC_FIRST 3
+  char* items[17];
+    #define OC_MALLOC_FIRST 1
+    items[1] = (char*)malloc(sizeof(char)*64);
+    items[2] = (char*)malloc(sizeof(char)*64);
     items[3] = (char*)malloc(sizeof(char)*64);
     items[4] = (char*)malloc(sizeof(char)*64);
     items[5] = (char*)malloc(sizeof(char)*64);
@@ -394,15 +404,14 @@ show_menu_overclock(void) {
     items[7] = (char*)malloc(sizeof(char)*64);
     items[8] = (char*)malloc(sizeof(char)*64);
     items[9] = (char*)malloc(sizeof(char)*64);
-    items[10] = (char*)malloc(sizeof(char)*64);
-    #define OC_MALLOC_LAST 10
-    items[11] = "  [Set defaults(*req reboot/don't save!!)]";
-    items[12] = "";
-    items[13] = "  [Backup Settings]";
-    items[14] = "  [Restore Settings]";
-    items[15] = "  [Save]";
-    items[16] = "  --Go Back";
-    items[17] = NULL;
+    #define OC_MALLOC_LAST 9
+    items[10] = "  [Set defaults(*req reboot/don't save!!)]";
+    items[11] = "";
+    items[12] = "  [Backup Settings]";
+    items[13] = "  [Restore Settings]";
+    items[14] = "  [Save]";
+    items[15] = "  --Go Back";
+    items[16] = NULL;
 
   for (;;) {
 
@@ -413,50 +422,48 @@ show_menu_overclock(void) {
       default: items[0] = "  +Status: [Unknown] -->"; break;
     }
 
-    switch (get_overclock_value("load_all")) {
-      case 0: items[1] = "  +Load all modules: [Disable] -->"; break;
-      case 1: items[1] = "  +Load all modules: [Enable] -->"; break;
+   struct gov_config *ptr;
 
-      default: items[1] = "  +Load all modules: [Unknown] -->"; break;
+   char *entry = "  +Scaling: [";
+   char *end = "] -->";
+   char *final = (char*)malloc(sizeof(char)*64);
+   char *mode = get_overclock_gov("scaling");
+
+   total_gov_count = 0;
+
+   for (ptr = govs; ptr->gov_module != NULL; ++ptr) {
+      if (!strcmp(mode, ptr->gov_module)) {
+         final = strcpy(final, entry);
+         final = strcat(final, ptr->gov_common);
+         final = strcat(final, end);
+      }
+      total_gov_count++;
     }
 
-    switch (get_overclock_value("scaling")) {
-      case 0: items[2] = "  +Scaling: [Conservative] -->"; break;
-      case 1: items[2] = "  +Scaling: [Interactive] -->"; break;
-      case 2: items[2] = "  +Scaling: [InteractiveX] -->"; break;
-      case 3: items[2] = "  +Scaling: [Ondemand] -->"; break;
-      case 4: items[2] = "  +Scaling: [Performance] -->"; break;
-      case 5: items[2] = "  +Scaling: [Powersave] -->"; break;
-      case 6: items[2] = "  +Scaling: [Smartass] -->"; break;
-      case 7: items[2] = "  +Scaling: [SmartassV2] -->"; break;
-      case 8: items[2] = "  +Scaling: [BOOSTEDassV2] -->"; break;
-      case 9: items[2] = "  +Scaling: [Userspace] -->"; break;
+    items[1] = final;
+   
+    //The following line causes a seg fault.  Is the gov not getting saved correctly in the struct?
+    //sprintf(items[1], "  +Scaling: [ %s ] -->", get_gov_common( get_overclock_gov("scaling") ));
 
-      default: items[2] = "  +Scaling: [Unknown] -->"; break;
-    }
-    
-    sprintf(items[3], "  +Clk1: [%d] -->", get_overclock_value("clk1"));
-    sprintf(items[4], "  +Clk2: [%d] -->", get_overclock_value("clk2"));
-    sprintf(items[5], "  +Clk3: [%d] -->", get_overclock_value("clk3"));
+    sprintf(items[2], "  +Clk1: [%d] -->", get_overclock_value("clk1"));
+    sprintf(items[3], "  +Clk2: [%d] -->", get_overclock_value("clk2"));
+    sprintf(items[4], "  +Clk3: [%d] -->", get_overclock_value("clk3"));
 #ifdef USE_4_CLOCK_LEVELS
-    sprintf(items[6], "  +Clk4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("clk4"));
-    sprintf(items[10], "  +Vsel4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("vsel4"));
+    sprintf(items[5], "  +Clk4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("clk4"));
+    sprintf(items[9], "  +Vsel4: [%d] --> (*req 2.3.3 kernel)", get_overclock_value("vsel4"));
 #else
-    strcpy(items[6], "  ----------------------");
-    strcpy(items[10], "  ----------------------");
+    strcpy(items[5], "  ----------------------");
+    strcpy(items[9], "  ----------------------");
 #endif
-    sprintf(items[7], "  +Vsel1: [%d] -->", get_overclock_value("vsel1"));
-    sprintf(items[8], "  +Vsel2: [%d] -->", get_overclock_value("vsel2"));
-    sprintf(items[9], "  +Vsel3: [%d] -->", get_overclock_value("vsel3"));
+    sprintf(items[6], "  +Vsel1: [%d] -->", get_overclock_value("vsel1"));
+    sprintf(items[7], "  +Vsel2: [%d] -->", get_overclock_value("vsel2"));
+    sprintf(items[8], "  +Vsel3: [%d] -->", get_overclock_value("vsel3"));
 
     int chosen_item = get_menu_selection(title_headers, items, 1, select);
 
     switch (chosen_item) {
       case OVERCLOCK_STATUS:
         set_overclock_value("enable", menu_overclock_status(get_overclock_value("enable"))); break;
-
-      case OVERCLOCK_LOAD_ALL:
-        set_overclock_value("load_all", menu_overclock_status(get_overclock_value("load_all"))); break;
 
       case OVERCLOCK_SCALING:
         menu_overclock_scaling(); break;
@@ -497,6 +504,7 @@ show_menu_overclock(void) {
         ui_print("Restoring config.... ");
         set_overclock_config();
         exec_script("/system/bin/hijack", FILE_OVERCLOCK_RESTORE);
+        get_overclock_config();
         ui_print("Done.\n");
         break;
 
@@ -526,3 +534,209 @@ show_menu_overclock(void) {
 
   return 0;
 }
+
+
+int check_for_old_config(void) {
+   FILE *fp;
+
+   if ((fp = fopen(FILE_OVERCLOCK_CONF, "r")) == NULL) {
+      return 1;
+   }
+
+   char buffer[255];
+   bool found = 0;
+
+   while (fgets(buffer, 254, fp) != NULL) {
+      if (strncasecmp("scaling cpufreq",buffer,15) == 0)
+         found = 1;
+   }
+
+   fclose(fp);
+
+   if (found)
+      return 0;
+
+   return 1;
+}
+
+
+int update_old_config(void) {
+   FILE *fp;
+   char name[255];
+   struct overclock_config *config;
+
+   if ((fp = fopen(FILE_OVERCLOCK_CONF, "r")) == NULL) {
+      return 1;
+   }
+
+   while((fscanf(fp, "%s", name)) != EOF) {
+
+      for (config = overclock; config->name != NULL; ++config) {
+         if (!strcmp(config->name, name)) {
+            fscanf(fp, "%d", &config->value);
+         }
+      }
+   }
+
+   fclose(fp);
+   int old_gov = get_overclock_value("scaling");
+
+   switch (old_gov) {
+      case 0:
+         set_overclock_gov("scaling", "cpufreq_conservative.ko");
+         break;
+      case 1:
+         set_overclock_gov("scaling", "cpufreq_interactive.ko");
+         break;
+      case 2:
+         set_overclock_gov("scaling", "cpufreq_interactivex.ko");
+         break;
+      case 3:
+         set_overclock_gov("scaling", "cpufreq_ondemand.ko");
+         break;
+      case 4:
+         set_overclock_gov("scaling", "cpufreq_performance.ko");
+         break;
+      case 5:
+         set_overclock_gov("scaling", "cpufreq_powersave.ko");
+         break;
+      case 6:
+         set_overclock_gov("scaling", "cpufreq_smartass.ko");
+         break;
+      case 7:
+         set_overclock_gov("scaling", "cpufreq_smartassv2.ko");
+         break;
+      case 8:
+         set_overclock_gov("scaling", "cpufreq_BOOSTEDassV2.ko");
+         break;
+      case 9:
+         set_overclock_gov("scaling", "cpufreq_userspace.ko");
+         break;
+      default:
+         set_overclock_gov("scaling", "cpufreq_smartassv2.ko");
+         break;
+   }
+
+   set_overclock_config();
+
+   return 0;
+}
+
+int read_governors(void) {
+   struct dirent *dp;
+
+   const char *dir_path="/system/lib/modules";
+   const char *base="cpufreq_";
+   int count = 0; //Number of Governors found
+
+   DIR *dir = opendir(dir_path);
+
+   while ((dp=readdir(dir)) != NULL ) {
+      if (strncasecmp(base, dp->d_name, 8) == 0) {
+         count++;
+      }
+   }
+
+   closedir(dir);
+
+   struct gov_config temp[count];
+   struct gov_config *ptr = temp;
+
+   dir = opendir(dir_path);
+   count = 0;
+
+   while ((dp=readdir(dir)) != NULL) {
+      if (strncasecmp(base, dp->d_name, 8) == 0) {
+         int i = strlen(dp->d_name);
+         char *cname = (char*)malloc(sizeof(char)*(i-10));
+         int lcv1, lcv2;
+         for (lcv1=8, lcv2=0; lcv1 < (i-3); lcv1++, lcv2++) {
+            cname[lcv2] = dp->d_name[lcv1];
+         }
+         cname[i-11] = '\0';
+         if (strcasecmp(cname, "stats") != 0) {
+            ptr->gov_module = dp->d_name;
+            ptr->gov_common = cname;
+            ++ptr;
+            count++;
+         }
+      }
+   }
+
+   ptr->gov_module = NULL;
+   ptr->gov_common = NULL;
+
+   int lcv, lcv3;
+   int gov_count = 0;
+   int gov_found = 0;
+   int first_gov = 1;
+   struct gov_config *ptr2 = temp;
+
+   for (; (ptr2->gov_module != NULL); ++ptr2) {
+      gov_found = check_gov(ptr2->gov_module);
+      if (!gov_found) {
+         add_gov(ptr2->gov_module, ptr2->gov_common);
+      }
+   }
+   add_gov(NULL, NULL);
+   print_govs();
+
+   //Print the govs now
+   struct gov_config *config;
+   // **** Why is the above config defined???
+   
+   closedir(dir);
+   return 0;
+}
+
+int print_govs(void) {
+   struct gov_config *ptr;
+   FILE *fp;
+
+   if ((fp = fopen(FILE_OVERCLOCK_GOVS, "w")) == NULL) {
+      return 1;
+   }
+
+   total_gov_count = 0;
+
+   for (ptr = govs; ptr->gov_module != NULL; ++ptr) {
+      fprintf(fp, "%s %s\n", ptr->gov_module, ptr->gov_common);
+      total_gov_count++;
+   }
+   fclose(fp);
+   return 0;
+}
+
+int add_gov(char *module, char *common) {
+   struct gov_config *ptr;
+
+   char *gov_long_name = calloc(MAX_GOV_LONG_NAME, sizeof(char));
+   char *gov_short_name = calloc(MAX_GOV_SHORT_NAME, sizeof(char));
+
+   printf("After calloc\n");
+
+   if(module != NULL) {
+      gov_long_name = strdup(module);
+      gov_short_name = strdup(common);
+   }
+
+   for (ptr=govs; (ptr->gov_module != NULL); ++ptr) {
+      //just finding the end
+   }
+   ptr->gov_module = gov_long_name;
+   ptr->gov_common = gov_short_name;
+   return 0;
+}
+
+int check_gov(char *module) {
+   struct gov_config *ptr;
+
+   for (ptr=govs; (ptr->gov_module != NULL); ++ptr) {
+      if (strcasecmp(ptr->gov_module, module) == 0)
+         return 1;
+   }
+
+   return 0;
+}
+
+
